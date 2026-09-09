@@ -1,17 +1,9 @@
 import { Router } from "express";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 const router = Router();
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.hostinger.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 router.post("/", async (req, res) => {
   console.log("=================================");
@@ -28,11 +20,11 @@ router.post("/", async (req, res) => {
       });
     }
 
-    console.log("Attempting to send email...");
+    console.log("Attempting to send email with Resend...");
 
-    const info = await transporter.sendMail({
-      from: `"NAMY Website" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_USER,
+    const { data, error } = await resend.emails.send({
+      from: `NAMY Website <info@namyzambia.org>`,
+      to: ["info@namyzambia.org"],
       replyTo: email,
       subject: `New Contact Message from ${name}`,
 
@@ -45,20 +37,40 @@ ${message}
       `,
 
       html: `
-        <h2>New Contact Message</h2>
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <h2>New Contact Message</h2>
 
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
+          <p>
+            <strong>Name:</strong> ${name}
+          </p>
 
-        <hr>
+          <p>
+            <strong>Email:</strong> ${email}
+          </p>
 
-        <h3>Message</h3>
-        <p>${message.replace(/\n/g, "<br>")}</p>
+          <hr />
+
+          <h3>Message</h3>
+
+          <p>
+            ${message.replace(/\n/g, "<br>")}
+          </p>
+        </div>
       `,
     });
 
-    console.log("EMAIL SENT:");
-    console.log(info.messageId);
+    if (error) {
+      console.error("RESEND ERROR:");
+      console.error(error);
+
+      return res.status(500).json({
+        error: "Failed to send message.",
+        details: error.message,
+      });
+    }
+
+    console.log("EMAIL SENT SUCCESSFULLY:");
+    console.log(data);
 
     return res.status(200).json({
       success: true,
