@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import authRouter from './routes/auth.js';
 import { resourceRouter } from './routes/resource.js';
 import uploadRouter from './routes/upload.js';
+import contactRouter from './routes/contact.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -26,6 +27,7 @@ app.use('/api/seminars', resourceRouter('seminars'));
 app.use('/api/leadership', resourceRouter('leadership'));
 app.use('/api/projects', resourceRouter('projects'));
 app.use('/api/upload', uploadRouter);
+app.use("/api/contact", contactRouter);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
